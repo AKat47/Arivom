@@ -1,0 +1,301 @@
+/* ── Reset & tokens ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #ffffff;
+  --bg2:       #f5f5f3;
+  --bg3:       #eeecea;
+  --text:      #1a1a18;
+  --text2:     #6b6b67;
+  --text3:     #a0a09a;
+  --border:    rgba(0, 0, 0, 0.10);
+  --border2:   rgba(0, 0, 0, 0.18);
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --font:      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:      #1c1c1a;
+    --bg2:     #252523;
+    --bg3:     #2e2e2b;
+    --text:    #f0ede6;
+    --text2:   #a0a09a;
+    --text3:   #6b6b67;
+    --border:  rgba(255, 255, 255, 0.10);
+    --border2: rgba(255, 255, 255, 0.20);
+  }
+}
+
+/* ── Page ────────────────────────────────────────────────────────────────── */
+body {
+  font-family: var(--font);
+  background: var(--bg3);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 4rem;
+}
+
+#root { width: 100%; max-width: 640px; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+button {
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 7px 14px;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+button:hover  { background: var(--bg2); }
+button:active { transform: scale(0.98); }
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+.header-left h1 { font-size: 22px; font-weight: 500; }
+.header-left p  { font-size: 12px; color: var(--text3); margin-top: 3px; }
+.header-right   { text-align: right; }
+.db-status      { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
+.status-dot     { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.loading { background: var(--text3); }
+.status-dot.ok      { background: #3b9e75; }
+.status-dot.error   { background: #c94040; }
+.progress { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+/* ── Category filters ────────────────────────────────────────────────────── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+}
+.filter-btn {
+  font-size: 12px;
+  padding: 4px 14px;
+  background: var(--bg);
+  color: var(--text2);
+  border: 0.5px solid var(--border2);
+}
+.filter-btn.active {
+  background: var(--bg2);
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── Flashcard ───────────────────────────────────────────────────────────── */
+.card-area { perspective: 1200px; margin-bottom: 1.25rem; }
+
+.flashcard {
+  width: 100%;
+  height: 280px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.flashcard.flipped { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  padding: 1.5rem;
+  overflow: hidden;
+}
+.card-back {
+  transform: rotateY(180deg);
+  justify-content: flex-start;
+  padding-top: 1.25rem;
+}
+
+.cat-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 11px;
+  border-radius: var(--radius-md);
+  margin-bottom: 14px;
+  border: none;
+  cursor: default;
+}
+.cat-tag:hover  { background: inherit; }
+.cat-tag:active { transform: none; }
+
+.card-topic    { font-size: 26px; font-weight: 500; text-align: center; line-height: 1.4; }
+.card-subtitle { font-size: 13px; color: var(--text3); margin-top: 8px; text-align: center; }
+.flip-hint     { font-size: 11px; color: var(--text3); margin-top: 20px; }
+
+.delete-btn {
+  position: absolute;
+  top: 10px; right: 10px;
+  padding: 3px 9px;
+  font-size: 11px;
+  color: var(--text3);
+  border-color: transparent;
+  background: transparent;
+}
+.delete-btn:hover { color: #c94040; background: var(--bg2); border-color: var(--border); }
+
+.back-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+.content-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  overflow-y: auto;
+  max-height: 200px;
+  width: 100%;
+  padding: 2px;
+}
+.pill {
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg2);
+  color: var(--text);
+  line-height: 1.5;
+  text-align: center;
+}
+.pill-sub { font-size: 11px; color: var(--text3); display: block; }
+
+/* card empty / loading state */
+.card-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; height: 100%;
+  color: var(--text2); font-size: 14px; text-align: center;
+}
+.spinner {
+  width: 22px; height: 22px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--text2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Nav row ─────────────────────────────────────────────────────────────── */
+.nav-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  max-width: 200px;
+  padding: 0 8px;
+}
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.dot:hover  { background: var(--text2) !important; }
+.dot:active { transform: none; }
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+.divider { height: 0.5px; background: var(--border); margin: 1.25rem 0; }
+
+/* ── Add card form ───────────────────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.section-title { font-size: 15px; font-weight: 500; }
+
+.form-wrap { display: flex; flex-direction: column; gap: 12px; }
+.field      { display: flex; flex-direction: column; gap: 4px; }
+
+.field label { font-size: 12px; color: var(--text2); }
+
+.field input,
+.field textarea {
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field input:focus,
+.field textarea:focus  { border-color: var(--text3); }
+.field textarea        { resize: vertical; min-height: 90px; }
+
+.form-actions { display: flex; gap: 8px; }
+.btn-primary  {
+  flex: 1;
+  background: var(--text);
+  color: var(--bg);
+  border-color: transparent;
+  justify-content: center;
+}
+.btn-primary:hover { background: var(--text2); }
+
+/* ── Toast ───────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--bg2);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-md);
+  padding: 9px 18px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+  z-index: 999;
+  color: var(--text);
+}
+.toast.show { opacity: 1; }
+
+/* ── Category color classes ──────────────────────────────────────────────── */
+.cat-காலம்     { background: #EEEDFE; color: #534AB7; }
+.cat-இயற்கை   { background: #E1F5EE; color: #0F6E56; }
+.cat-புவியியல் { background: #E6F1FB; color: #185FA5; }
+.cat-வரலாறு   { background: #FAEEDA; color: #854F0B; }
+.cat-இதர      { background: #F1EFE8; color: #5F5E5A; }

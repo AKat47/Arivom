@@ -1,0 +1,19 @@
+const mongoose = require('mongoose');
+
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) throw new Error('Missing MONGODB_URI environment variable');
+
+// Cache connection across warm serverless invocations
+let cached = global._mongooseConn;
+if (!cached) cached = global._mongooseConn = { conn: null, promise: null };
+
+async function connectDB() {
+  if (cached.conn) return cached.conn;
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
+  }
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
+
+module.exports = connectDB;

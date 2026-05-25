@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>என் கற்றல் அட்டைகள்</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #ffffff;
+      --bg2:       #f5f5f3;
+      --bg3:       #eeece8;
+      --text:      #1a1a18;
+      --text2:     #6b6b67;
+      --text3:     #a0a09a;
+      --border:    rgba(0,0,0,0.10);
+      --border2:   rgba(0,0,0,0.18);
+      --radius-md: 8px;
+      --radius-lg: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:      #1c1c1a;
+        --bg2:     #252523;
+        --bg3:     #2e2e2b;
+        --text:    #f0ede6;
+        --text2:   #a0a09a;
+        --text3:   #6b6b67;
+        --border:  rgba(255,255,255,0.10);
+        --border2: rgba(255,255,255,0.20);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg3);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .container { width: 100%; max-width: 640px; }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+    }
+    .header h1 { font-size: 22px; font-weight: 500; }
+    .header p  { font-size: 12px; color: var(--text3); margin-top: 3px; }
+    .header-right { text-align: right; font-size: 13px; color: var(--text2); }
+    .status-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .status-dot.ok  { background: #3b9e75; }
+    .status-dot.err { background: #c94040; }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 1.25rem;
+    }
+    .filter-btn {
+      font-size: 12px;
+      padding: 4px 14px;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      color: var(--text2);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .filter-btn.active {
+      background: var(--bg3);
+      color: var(--text);
+      border-color: var(--border2);
+      font-weight: 500;
+    }
+
+    /* ── Flashcard ── */
+    .card-area { perspective: 1200px; margin-bottom: 1.25rem; }
+    .flashcard {
+      width: 100%; height: 280px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+      cursor: pointer;
+    }
+    .flashcard.flipped { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute; inset: 0;
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      padding: 1.5rem;
+      overflow: hidden;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+      justify-content: flex-start;
+      padding-top: 1.25rem;
+    }
+
+    .cat-tag {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 11px;
+      border-radius: var(--radius-md);
+      margin-bottom: 14px;
+    }
+    .card-topic    { font-size: 26px; font-weight: 500; text-align: center; line-height: 1.4; }
+    .card-subtitle { font-size: 13px; color: var(--text3); margin-top: 8px; text-align: center; }
+    .flip-hint     { font-size: 11px; color: var(--text3); margin-top: 20px; }
+
+    .back-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      align-self: flex-start;
+      margin-bottom: 10px;
+    }
+    .content-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      overflow-y: auto;
+      max-height: 200px;
+      width: 100%;
+    }
+    .pill {
+      font-size: 13px;
+      padding: 5px 12px;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg2);
+      color: var(--text);
+      line-height: 1.5;
+      text-align: center;
+    }
+    .pill-sub { font-size: 11px; color: var(--text3); display: block; }
+
+    /* empty / loading states */
+    .card-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100%; gap: 10px;
+      color: var(--text2); font-size: 14px; text-align: center;
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--text2);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Nav ── */
+    .nav-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .dots {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      max-width: 200px;
+      padding: 0 8px;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    /* ── Buttons ── */
+    button {
+      font-family: inherit;
+      font-size: 13px;
+      padding: 7px 14px;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    button:hover  { background: var(--bg2); }
+    button:active { transform: scale(0.98); }
+
+    /* ── Divider ── */
+    .divider { height: 0.5px; background: var(--border); margin: 1.25rem 0; }
+
+    /* ── Add card section ── */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .section-title { font-size: 15px; font-weight: 500; }
+
+    .form-wrap { display: flex; flex-direction: column; gap: 12px; }
+    .field      { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 12px; color: var(--text2); }
+    .field input, .field textarea {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 8px 10px;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      color: var(--text);
+      width: 100%;
+      outline: none;
+    }
+    .field input:focus, .field textarea:focus {
+      border-color: var(--text3);
+    }
+    .field textarea { resize: vertical; min-height: 90px; }
+    .form-actions { display: flex; gap: 8px; }
+    .btn-primary {
+      flex: 1;
+      background: var(--text);
+      color: var(--bg);
+      border-color: transparent;
+    }
+    .btn-primary:hover { background: var(--text2); }
+
+    /* ── Delete button on card ── */
+    .delete-btn {
+      position: absolute;
+      top: 12px; right: 12px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text3);
+      border-color: transparent;
+      background: transparent;
+    }
+    .delete-btn:hover { color: #c94040; background: var(--bg2); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--bg2);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-md);
+      padding: 9px 18px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── Category colors ── */
+    .cat-காலம்     { background: #EEEDFE; color: #534AB7; }
+    .cat-இயற்கை   { background: #E1F5EE; color: #0F6E56; }
+    .cat-புவியியல் { background: #E6F1FB; color: #185FA5; }
+    .cat-வரலாறு   { background: #FAEEDA; color: #854F0B; }
+    .cat-இதர      { background: #F1EFE8; color: #5F5E5A; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>என் கற்றல் அட்டைகள்</h1>
+      <p>My Learning Cards</p>
+    </div>
+    <div class="header-right">
+      <span id="db-status"><span class="status-dot"></span>இணைக்கிறது…</span>
+      <br>
+      <span id="progress" style="margin-top:4px; display:inline-block;"></span>
+    </div>
+  </div>
+
+  <!-- Category filters -->
+  <div class="filters" id="filters"></div>
+
+  <!-- Flashcard -->
+  <div class="card-area">
+    <div class="flashcard" id="flashcard" onclick="toggleFlip()">
+      <div class="card-face" id="front-face">
+        <div class="card-state"><div class="spinner"></div><span>ஏற்றுகிறது…</span></div>
+      </div>
+      <div class="card-face card-back" id="back-face">
+        <p class="back-label">உள்ளடக்கம்</p>
+        <div class="content-grid" id="card-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-row">
+    <button onclick="prevCard()">← முந்தையது</button>
+    <div class="dots" id="dots"></div>
+    <button onclick="nextCard()">அடுத்தது →</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Add card -->
+  <div class="section-header">
+    <span class="section-title">புதிய அட்டை சேர்க்க</span>
+    <button onclick="toggleForm()" id="toggle-btn">+ சேர்</button>
+  </div>
+
+  <div id="add-form" style="display:none;">
+    <div class="form-wrap">
+      <div class="field">
+        <label for="f-topic">தலைப்பு (Topic in Tamil)</label>
+        <input id="f-topic" type="text" placeholder="எ.கா. பூக்கள் வகைகள்" />
+      </div>
+      <div class="field">
+        <label for="f-subtitle">துணைத் தலைப்பு (English subtitle — optional)</label>
+        <input id="f-subtitle" type="text" placeholder="e.g. Types of Flowers" />
+      </div>
+      <div class="field">
+        <label for="f-category">பிரிவு (Category)</label>
+        <input id="f-category" type="text" placeholder="எ.கா. இயற்கை, வரலாறு, அறிவியல்" />
+      </div>
+      <div class="field">
+        <label for="f-content">உள்ளடக்கம் — ஒவ்வொரு வரியில் ஒன்று</label>
+        <textarea id="f-content" placeholder="ஒவ்வொரு உருப்படியும் புதிய வரியில்&#10;எ.கா.&#10;செந்தாமரை&#10;மல்லிகை&#10;ரோஜா"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="addCard()">✓ சேமி (Save)</button>
+        <button onclick="clearForm()">✕ அழி</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:3001/api';
+
+  let cards = [];
+  let filtered = [];
+  let current = 0;
+  let flipped = false;
+  let formOpen = false;
+  let activeCategory = 'அனைத்தும்';
+
+  // ── API helpers ───────────────────────────────────────────────────────────
+
+  async function fetchCards() {
+    const res = await fetch(`${API}/cards`);
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  async function createCard(data) {
+    const res = await fetch(`${API}/cards`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  async function deleteCard(id) {
+    const res = await fetch(`${API}/cards/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  function applyFilter() {
+    filtered = activeCategory === 'அனைத்தும்'
+      ? [...cards]
+      : cards.filter(c => c.category === activeCategory);
+    current = 0;
+    render();
+  }
+
+  function render() {
+    renderFilters();
+    renderDots();
+
+    document.getElementById('progress').textContent =
+      filtered.length ? `${current + 1} / ${filtered.length}` : '0 அட்டைகள்';
+
+    const front = document.getElementById('front-face');
+
+    if (filtered.length === 0) {
+      front.innerHTML = `<div class="card-state">
+        <span style="font-size:28px;">📭</span>
+        <span>அட்டைகள் இல்லை<br><small style="color:var(--text3)">No cards in this category</small></span>
+      </div>`;
+      document.getElementById('card-content').innerHTML = '';
+      if (flipped) unflip();
+      return;
+    }
+
+    const card = filtered[current];
+    const catClass = `cat-${card.category}`;
+
+    front.innerHTML = `
+      <button class="delete-btn" onclick="event.stopPropagation(); confirmDelete('${card._id}', '${card.topic.replace(/'/g,"\\'")}')">✕ நீக்கு</button>
+      <span class="cat-tag ${catClass}">${card.category}</span>
+      <p class="card-topic">${card.topic}</p>
+      ${card.subtitle ? `<p class="card-subtitle">${card.subtitle}</p>` : ''}
+      <p class="flip-hint">தட்டவும் திருப்ப ↻</p>
+    `;
+
+    document.getElementById('card-content').innerHTML = card.content
+      .map(c => `<span class="pill">${c.label}${c.sub ? `<span class="pill-sub">${c.sub}</span>` : ''}</span>`)
+      .join('');
+
+    if (flipped) unflip();
+  }
+
+  function renderFilters() {
+    const cats = ['அனைத்தும்', ...new Set(cards.map(c => c.category))];
+    document.getElementById('filters').innerHTML = cats
+      .map(cat => `<button class="filter-btn${activeCategory === cat ? ' active' : ''}"
+          onclick="setCategory('${cat}')">${cat}</button>`)
+      .join('');
+  }
+
+  function renderDots() {
+    document.getElementById('dots').innerHTML = filtered
+      .map((_, i) => `<span class="dot" onclick="goTo(${i})"
+          style="background:${i === current ? 'var(--text)' : 'var(--border2)'}"></span>`)
+      .join('');
+  }
+
+  // ── Interactions ──────────────────────────────────────────────────────────
+
+  function setCategory(cat) { activeCategory = cat; applyFilter(); }
+  function goTo(i) { current = i; render(); }
+  function prevCard() { if (!filtered.length) return; current = (current - 1 + filtered.length) % filtered.length; render(); }
+  function nextCard() { if (!filtered.length) return; current = (current + 1) % filtered.length; render(); }
+
+  function toggleFlip() {
+    if (!filtered.length) return;
+    flipped = !flipped;
+    document.getElementById('flashcard').classList.toggle('flipped', flipped);
+  }
+
+  function unflip() {
+    flipped = false;
+    document.getElementById('flashcard').classList.remove('flipped');
+  }
+
+  function toggleForm() {
+    formOpen = !formOpen;
+    document.getElementById('add-form').style.display = formOpen ? 'block' : 'none';
+    document.getElementById('toggle-btn').textContent = formOpen ? '✕ மூடு' : '+ சேர்';
+  }
+
+  function clearForm() {
+    ['f-topic','f-subtitle','f-category','f-content'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  async function addCard() {
+    const topic    = document.getElementById('f-topic').value.trim();
+    const subtitle = document.getElementById('f-subtitle').value.trim();
+    const category = document.getElementById('f-category').value.trim() || 'இதர';
+    const raw      = document.getElementById('f-content').value;
+    const content  = raw.split('\n').map(s => s.trim()).filter(Boolean).map(s => ({ label: s }));
+
+    if (!topic)          return showToast('தலைப்பு உள்ளிடவும்!');
+    if (!content.length) return showToast('உள்ளடக்கம் உள்ளிடவும்!');
+
+    try {
+      const card = await createCard({ topic, subtitle, category, content });
+      cards.push(card);
+      activeCategory = 'அனைத்தும்';
+      applyFilter();
+      current = filtered.length - 1;
+      render();
+      clearForm();
+      toggleForm();
+      showToast('அட்டை சேர்க்கப்பட்டது ✓');
+    } catch (err) {
+      showToast('பிழை: ' + err.message);
+    }
+  }
+
+  async function confirmDelete(id, topic) {
+    if (!confirm(`"${topic}" அட்டையை நீக்கவா?`)) return;
+    try {
+      await deleteCard(id);
+      cards = cards.filter(c => c._id !== id);
+      if (current >= filtered.length - 1) current = Math.max(0, filtered.length - 2);
+      applyFilter();
+      showToast('அட்டை நீக்கப்பட்டது');
+    } catch (err) {
+      showToast('நீக்க முடியவில்லை: ' + err.message);
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+
+  function setDbStatus(ok, label) {
+    const el = document.getElementById('db-status');
+    el.innerHTML = `<span class="status-dot ${ok ? 'ok' : 'err'}"></span>${label}`;
+  }
+
+  async function init() {
+    try {
+      cards = await fetchCards();
+      setDbStatus(true, 'MongoDB இணைந்தது');
+      applyFilter();
+    } catch (err) {
+      setDbStatus(false, 'இணைக்க முடியவில்லை');
+      document.getElementById('front-face').innerHTML = `
+        <div class="card-state">
+          <span style="font-size:28px;">⚠️</span>
+          <span>சர்வர் கிடைக்கவில்லை<br>
+          <small style="color:var(--text3)">Run: node server.js</small></span>
+        </div>`;
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
